@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "423560146275",
+    "firebase_url": "https://chatexample-e0329.firebaseio.com",
+    "project_id": "chatexample-e0329",
+    "storage_bucket": "chatexample-e0329.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:423560146275:android:f66efeddf10697082df756",
+        "android_client_info": {
+          "package_name": "com.bsoftwares.chatexample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "423560146275-ob0vr2v310enaj1lptu0josu5kanprmk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bsoftwares.chatexample",
+            "certificate_hash": "4726f883865f8baa300c6c5f6d0848db6c515661"
+          }
+        },
+        {
+          "client_id": "423560146275-0095bk7o5lt16anlgno994da83iovsfu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSGxO-l6PQggN5rjbNmmgVaQNTgH2piWM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "423560146275-0095bk7o5lt16anlgno994da83iovsfu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

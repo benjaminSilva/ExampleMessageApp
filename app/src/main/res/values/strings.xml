@@ -16,4 +16,8 @@
     <string name="email">Email</string>
     <string name="already_have_an_account">Already have an account?</string>
     <string name="register">Register</string>
+    <string name="error_characters">The given password is invalid. [ Password should be at least 6 characters ]</string>
+    <string name="error_email">The email address is badly formatted.</string>
+    <string name="select_photo">Select Photo</string>
+    <string name="Title">Messaging App Example</string>
 </resources>

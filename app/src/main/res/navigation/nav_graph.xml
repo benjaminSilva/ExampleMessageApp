@@ -7,22 +7,37 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.bsoftwares.chatexample.LoginFragment"
-        android:label="@string/first_fragment_label"
+        android:name="com.bsoftwares.chatexample.ui.LoginFragment"
         tools:layout="@layout/fragment_login">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            app:destination="@id/SecondFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:popUpTo="@id/SecondFragment" />
+        <action
+            android:id="@+id/action_FirstFragment_to_homeActivity"
+            app:destination="@id/homeActivity"
+            app:popUpTo="@id/homeActivity" />
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.bsoftwares.chatexample.RegisterFragment"
-        android:label="@string/second_fragment_label"
+        android:name="com.bsoftwares.chatexample.ui.RegisterFragment"
         tools:layout="@layout/fragment_register">
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+            app:destination="@id/FirstFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:popUpTo="@id/FirstFragment" />
+        <action
+            android:id="@+id/action_SecondFragment_to_homeActivity"
+            app:destination="@id/homeActivity"
+            app:popUpTo="@id/homeActivity" />
     </fragment>
+    <activity
+        android:id="@+id/homeActivity"
+        android:name="com.bsoftwares.chatexample.ui.HomeActivity"
+        android:label="activity_home"
+        tools:layout="@layout/activity_home" />
 </navigation>

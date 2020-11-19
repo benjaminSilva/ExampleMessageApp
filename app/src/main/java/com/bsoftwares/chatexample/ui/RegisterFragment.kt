@@ -1,10 +1,7 @@
-package com.bsoftwares.chatexample
+package com.bsoftwares.chatexample.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.content.res.Resources
-import android.graphics.ImageDecoder
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,13 +11,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.fragment.findNavController
+import com.bsoftwares.chatexample.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.fragment_register.*
 import java.util.*
@@ -38,8 +32,10 @@ class RegisterFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_register, container, false)
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         txt_login.setOnClickListener {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
@@ -75,6 +71,8 @@ class RegisterFragment : Fragment() {
             override fun afterTextChanged(p0: Editable?) {
             }
         })
+
+
     }
 
     var selectPhotoURI : Uri? = null
@@ -107,7 +105,6 @@ class RegisterFragment : Fragment() {
                 return@addOnCompleteListener
             }
             uploadImageToFireStorage(user)
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
     }
 
@@ -123,7 +120,8 @@ class RegisterFragment : Fragment() {
         val uid = FirebaseAuth.getInstance().uid ?: ""
         val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
         ref.setValue(User(uid,user,profileImageUrl)).addOnSuccessListener {
-            Toast.makeText(requireContext(), "Criado", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_SecondFragment_to_homeActivity)
+            requireActivity().finish()
         }
     }
 

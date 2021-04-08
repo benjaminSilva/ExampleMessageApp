@@ -18,4 +18,8 @@ class LoginFragmentViewModel : ViewModel(){
         }
     }
 
+    val currentUserUid = FirebaseUserLiveData().map { user ->
+        user?.uid
+    }
+
 }

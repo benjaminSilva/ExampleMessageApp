@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils.keyboardanimation
 
 import android.view.View
 import androidx.core.view.OnApplyWindowInsetsListener
@@ -22,39 +22,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 
-/**
- * A class which extends/implements both [WindowInsetsAnimationCompat.Callback] and
- * [View.OnApplyWindowInsetsListener], which should be set on the root view in your layout.
- *
- * This class enables the root view is selectively defer handling any insets which match
- * [deferredInsetTypes], to enable better looking [WindowInsetsAnimationCompat]s.
- *
- * An example is the following: when a [WindowInsetsAnimationCompat] is started, the system will dispatch
- * a [WindowInsetsCompat] instance which contains the end state of the animation. For the scenario of
- * the IME being animated in, that means that the insets contains the IME height. If the view's
- * [View.OnApplyWindowInsetsListener] simply always applied the combination of
- * [WindowInsetsCompat.Type.ime] and [WindowInsetsCompat.Type.systemBars] using padding, the viewport of any
- * child views would then be smaller. This results in us animating a smaller (padded-in) view into
- * a larger viewport. Visually, this results in the views looking clipped.
- *
- * This class allows us to implement a different strategy for the above scenario, by selectively
- * deferring the [WindowInsetsCompat.Type.ime] insets until the [WindowInsetsAnimationCompat] is ended.
- * For the above example, you would create a [RootViewDeferringInsetsCallback] like so:
- *
- * ```
- * val callback = RootViewDeferringInsetsCallback(
- *     persistentInsetTypes = WindowInsetsCompat.Type.systemBars(),
- *     deferredInsetTypes = WindowInsetsCompat.Type.ime()
- * )
- * ```
- *
- * This class is not limited to just IME animations, and can work with any [WindowInsetsCompat.Type]s.
- *
- * @param persistentInsetTypes the bitmask of any inset types which should always be handled
- * through padding the attached view
- * @param deferredInsetTypes the bitmask of insets types which should be deferred until after
- * any related [WindowInsetsAnimationCompat]s have ended
- */
+
 class RootViewDeferringInsetsCallback(
     val persistentInsetTypes: Int,
     val deferredInsetTypes: Int

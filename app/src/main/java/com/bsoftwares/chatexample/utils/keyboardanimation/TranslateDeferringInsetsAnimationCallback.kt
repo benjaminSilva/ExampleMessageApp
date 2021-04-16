@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils.keyboardanimation
 
 import android.view.View
 import androidx.core.graphics.Insets
@@ -42,7 +42,7 @@ class TranslateDeferringInsetsAnimationCallback(
     private val view: View,
     val persistentInsetTypes: Int,
     val deferredInsetTypes: Int,
-    dispatchMode: Int = DISPATCH_MODE_STOP
+    dispatchMode: Int = DISPATCH_MODE_STOP,
 ) : WindowInsetsAnimationCompat.Callback(dispatchMode) {
     init {
         require(persistentInsetTypes and deferredInsetTypes == 0) {

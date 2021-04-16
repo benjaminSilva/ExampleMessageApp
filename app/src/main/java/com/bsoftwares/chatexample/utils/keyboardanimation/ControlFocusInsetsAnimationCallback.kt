@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils.keyboardanimation
 
 import android.view.View
 import androidx.core.view.ViewCompat

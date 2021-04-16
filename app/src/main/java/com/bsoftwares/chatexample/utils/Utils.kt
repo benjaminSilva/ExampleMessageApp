@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils
 
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.graphics.Rect
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.bsoftwares.chatexample.model.PushNotification
+import com.bsoftwares.chatexample.network.RetrofitInstance
+import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 
 private val tmpIntArr = IntArray(2)
@@ -67,5 +76,18 @@ private fun hiddenSuppressLayout(group: ViewGroup, suppress: Boolean) {
         } catch (e: NoSuchMethodError) {
             tryHiddenSuppressLayout = false
         }
+    }
+}
+
+fun sendNotification(notification: PushNotification) = CoroutineScope(Dispatchers.IO).launch {
+    try {
+        val response = RetrofitInstance.api.postNotification(notification)
+        if(response.isSuccessful) {
+            Log.d(TAG, "Response: ${Gson().toJson(response.message())}")
+        } else {
+            Log.e(TAG, response.errorBody().toString())
+        }
+    } catch(e: Exception) {
+        Log.e(TAG, e.toString())
     }
 }

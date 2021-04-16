@@ -1,12 +1,8 @@
 package com.bsoftwares.chatexample.ui
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bsoftwares.chatexample.R
-import com.bsoftwares.chatexample.viewModel.LoginFragmentViewModel
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 

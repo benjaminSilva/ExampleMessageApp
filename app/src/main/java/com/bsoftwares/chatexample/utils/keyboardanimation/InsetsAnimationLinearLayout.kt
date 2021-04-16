@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils.keyboardanimation
 
 import android.content.Context
 import android.util.AttributeSet
@@ -26,6 +26,7 @@ import androidx.core.view.NestedScrollingParent3
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.bsoftwares.chatexample.utils.suppressLayoutCompat
 
 /**
  * A [LinearLayout] which acts as a [nested scroll parent][NestedScrollingParent3] to automatically
@@ -141,10 +142,14 @@ class InsetsAnimationLinearLayout @JvmOverloads constructor(
             if (imeAnimController.isInsetAnimationInProgress()) {
                 // If we currently have control, we can update the IME insets
                 consumed[1] = -imeAnimController.insetBy(-dyUnconsumed)
-            } else if (scrollImeOnScreenWhenNotVisible &&
-                !imeAnimController.isInsetAnimationRequestPending() &&
-                ViewCompat.getRootWindowInsets(this)
-                    ?.isVisible(WindowInsets.Type.ime()) == false
+            } else if (if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    scrollImeOnScreenWhenNotVisible &&
+                        !imeAnimController.isInsetAnimationRequestPending() &&
+                        ViewCompat.getRootWindowInsets(this)
+                            ?.isVisible(WindowInsets.Type.ime()) == false
+                } else {
+                    TODO("VERSION.SDK_INT < R")
+                }
             ) {
                 // If we don't currently have control, the IME is not shown,
                 // the user is scrolling up, and the view can't scroll up any more
@@ -172,8 +177,12 @@ class InsetsAnimationLinearLayout @JvmOverloads constructor(
         } else {
             // Otherwise we may need to start a control request and immediately fling
             // using the velocityY
-            val imeVisible = ViewCompat.getRootWindowInsets(this)
-                ?.isVisible(WindowInsets.Type.ime()) == true
+            val imeVisible = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                ViewCompat.getRootWindowInsets(this)
+                    ?.isVisible(WindowInsets.Type.ime()) == true
+            } else {
+                TODO("VERSION.SDK_INT < R")
+            }
             when {
                 velocityY > 0 && scrollImeOnScreenWhenNotVisible && !imeVisible -> {
                     // If the fling is in a upwards direction, and the IME is not visible,

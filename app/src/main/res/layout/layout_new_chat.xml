@@ -19,28 +19,22 @@
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/civ_userImage"
             android:layout_width="80dp"
-            android:layout_height="80dp" />
+            android:layout_height="80dp"
+            android:src="@drawable/ic_loading" />
 
     </com.facebook.shimmer.ShimmerFrameLayout>
 
 
-    <com.facebook.shimmer.ShimmerFrameLayout
-        android:id="@+id/shimmer_test2"
+    <com.elyeproj.loaderviewlibrary.LoaderTextView
+        android:id="@+id/txt_userName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/shimmer_test"
         app:layout_constraintStart_toEndOf="@+id/shimmer_test"
-        app:layout_constraintTop_toTopOf="@+id/shimmer_test">
-
-        <com.elyeproj.loaderviewlibrary.LoaderTextView
-            android:id="@+id/txt_userName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            tools:text="User Name" />
-
-    </com.facebook.shimmer.ShimmerFrameLayout>
+        app:layout_constraintTop_toTopOf="@+id/shimmer_test"
+        tools:text="User Name" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

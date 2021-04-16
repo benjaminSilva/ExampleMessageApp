@@ -16,7 +16,7 @@
 
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package com.google.android.samples.insetsanimation
+package com.bsoftwares.chatexample.utils.keyboardanimation
 
 import android.os.CancellationSignal
 import android.view.View
@@ -144,11 +144,14 @@ internal class SimpleImeAnimationController {
      * @return the amount of [dy] consumed by the inset animation, in pixels
      */
     fun insetBy(dy: Int): Int {
+        if (insetsAnimationController == null)
+            return 0
         val controller = insetsAnimationController
-            ?: throw IllegalStateException(
-                "Current WindowInsetsAnimationController is null." +
-                        "This should only be called if isAnimationInProgress() returns true"
-            )
+            ?:
+                throw IllegalStateException(
+                    "Current WindowInsetsAnimationController is null." +
+                            "This should only be called if isAnimationInProgress() returns true"
+                )
 
         // Call updateInsetTo() with the new inset value
         return insetTo(controller.currentInsets.bottom - dy)
@@ -163,6 +166,8 @@ internal class SimpleImeAnimationController {
      * @return the distance moved by the inset animation, in pixels
      */
     fun insetTo(inset: Int): Int {
+        if (insetsAnimationController==null)
+            return 0
         val controller = insetsAnimationController
             ?: throw IllegalStateException(
                 "Current WindowInsetsAnimationController is null." +
@@ -357,7 +362,7 @@ internal class SimpleImeAnimationController {
             }
         ).withSpringForceProperties {
             // Tweak the damping value, to remove any bounciness.
-            dampingRatio = SpringForce.DAMPING_RATIO_NO_BOUNCY
+            dampingRatio = SpringForce.DAMPING_RATIO_LOW_BOUNCY
             // The stiffness value controls the strength of the spring animation, which
             // controls the speed. Medium (the default) is a good value, but feel free to
             // play around with this value.

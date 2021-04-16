@@ -16,11 +16,17 @@
 
 package com.bsoftwares.chatexample.utils
 
-import android.widget.EditText
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Log
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.LiveData
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import java.io.ByteArrayOutputStream
+
 
 /**
  * This class observes the current FirebaseUser. If there is no logged in user, FirebaseUser will
@@ -47,6 +53,49 @@ class FirebaseUserLiveData : LiveData<FirebaseUser?>() {
     }
 }
 
-fun createString(text : TextView) : String{
+fun createString(text: TextView) : String{
     return if (text.toString().isEmpty()) "" else text.text.toString()
+}
+
+object ImageResizer {
+    //For Image Size 640*480, use MAX_SIZE =  307200 as 640*480 307200
+    //private static long MAX_SIZE = 360000;
+    //private static long THUMB_SIZE = 6553;
+    fun reduceBitmapSize(bitmap: Bitmap, MAX_SIZE: Int): Bitmap {
+        val ratioSquare: Double
+        val bitmapHeight: Int
+        val bitmapWidth: Int
+        bitmapHeight = bitmap.height
+        bitmapWidth = bitmap.width
+        ratioSquare = (bitmapHeight * bitmapWidth / MAX_SIZE).toDouble()
+        if (ratioSquare <= 1) return bitmap
+        val ratio = Math.sqrt(ratioSquare)
+        Log.d("mylog", "Ratio: $ratio")
+        val requiredHeight = Math.round(bitmapHeight / ratio).toInt()
+        val requiredWidth = Math.round(bitmapWidth / ratio).toInt()
+        return Bitmap.createScaledBitmap(bitmap, requiredWidth, requiredHeight, true)
+    }
+
+    fun generateThumb(bitmap: Bitmap, THUMB_SIZE: Int): Bitmap {
+        val ratioSquare: Double
+        val bitmapHeight: Int
+        val bitmapWidth: Int
+        bitmapHeight = bitmap.height
+        bitmapWidth = bitmap.width
+        ratioSquare = (bitmapHeight * bitmapWidth / THUMB_SIZE).toDouble()
+        if (ratioSquare <= 1) return bitmap
+        val ratio = Math.sqrt(ratioSquare)
+        Log.d("mylog", "Ratio: $ratio")
+        val requiredHeight = Math.round(bitmapHeight / ratio).toInt()
+        val requiredWidth = Math.round(bitmapWidth / ratio).toInt()
+        return Bitmap.createScaledBitmap(bitmap, requiredWidth, requiredHeight, true)
+    }
+}
+
+fun getImageUri(inContext: Context, inImage: Bitmap): Uri? {
+    val bytes = ByteArrayOutputStream()
+    inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+    val path =
+        MediaStore.Images.Media.insertImage(inContext.contentResolver, inImage, "Title", null)
+    return Uri.parse(path)
 }

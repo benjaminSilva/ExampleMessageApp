@@ -4,10 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
 import com.bsoftwares.chatexample.utils.FirebaseUserLiveData
 
-class LoginFragmentViewModel : ViewModel(){
+class UserViewModel : ViewModel(){
 
     enum class AuthenticationState {
         AUTHENTICATED, UNAUTHENTICATED, INVALID_AUTHENTICATION
+    }
+
+    companion object {
+        val currentUser = FirebaseUserLiveData().value
     }
 
     val authenticationState = FirebaseUserLiveData().map { user ->

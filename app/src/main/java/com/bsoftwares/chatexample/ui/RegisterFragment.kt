@@ -21,6 +21,7 @@ import com.bsoftwares.chatexample.utils.ImageResizer
 import com.bsoftwares.chatexample.utils.getImageUri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.fragment_register.*
 import java.util.*
@@ -137,7 +138,7 @@ class RegisterFragment : Fragment() {
     private fun saveUserToFirebaseDatabase(profileImageUrl: String,user:String) {
         val uid = FirebaseAuth.getInstance().uid ?: ""
         val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
-        ref.setValue(User(uid,user,profileImageUrl,"")).addOnSuccessListener {
+        ref.setValue(User(uid,user,profileImageUrl,FirebaseMessaging.getInstance().token.toString())).addOnSuccessListener {
             findNavController().navigate(R.id.action_SecondFragment_to_homeActivity)
             requireActivity().finish()
         }

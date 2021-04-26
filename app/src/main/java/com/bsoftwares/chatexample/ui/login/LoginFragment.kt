@@ -1,4 +1,4 @@
-package com.bsoftwares.chatexample.ui
+package com.bsoftwares.chatexample.ui.login
 
 import android.os.Bundle
 import android.text.Editable
@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bsoftwares.chatexample.R
 import com.bsoftwares.chatexample.utils.createString
@@ -43,7 +44,7 @@ class LoginFragment : Fragment() {
             if (password == "")
                 til_password_login.error = getString(R.string.error_password_required)
             if (email.isNotEmpty() || password.isNotEmpty())
-                signIn(email, password)
+                signIn(email,password)
         }
 
         txt_register.setOnClickListener {

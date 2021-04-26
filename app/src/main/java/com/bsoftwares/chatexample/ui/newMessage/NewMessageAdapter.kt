@@ -1,21 +1,23 @@
-package com.bsoftwares.chatexample.ui
+package com.bsoftwares.chatexample.ui.newMessage
 
+import android.os.Build
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.View.OnClickListener
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.bsoftwares.chatexample.R
-import com.bsoftwares.chatexample.model.ChatUser
-import com.squareup.picasso.Callback
-import com.squareup.picasso.Picasso
+import com.bsoftwares.chatexample.database.UsersDB
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.auth.User
 import kotlinx.android.synthetic.main.layout_new_chat.view.*
-import java.lang.Exception
+import java.util.function.Predicate
 
 class NewMessageAdapter(private val interaction: Interaction? = null) :
-    ListAdapter<ChatUser, NewMessageAdapter.NewMessageViewModel>(ChatUserDC()) {
+    ListAdapter<UsersDB, NewMessageAdapter.NewMessageViewModel>(ChatUserDC()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = NewMessageViewModel(
         LayoutInflater.from(parent.context)
@@ -25,8 +27,12 @@ class NewMessageAdapter(private val interaction: Interaction? = null) :
     override fun onBindViewHolder(holder: NewMessageViewModel, position: Int) =
         holder.bind(getItem(position))
 
-    fun swapData(data: List<ChatUser>) {
-        submitList(data.toMutableList())
+    fun swapData(data: List<UsersDB>) {
+        var newList = data.toMutableList()
+        newList.removeIf {
+            it.userUID == FirebaseAuth.getInstance().uid
+        }
+        submitList(newList)
     }
 
     inner class NewMessageViewModel(
@@ -45,38 +51,33 @@ class NewMessageAdapter(private val interaction: Interaction? = null) :
             val clicked = getItem(adapterPosition)
         }
 
-        fun bind(item: ChatUser) = with(itemView) {
+        fun bind(item: UsersDB) = with(itemView) {
             itemView.setOnClickListener {
-                interaction?.onItemClicked(adapterPosition,item)
+                interaction?.onItemClicked(adapterPosition,item.userUID)
             }
-            itemView.txt_userName.text = item.username
-            Picasso.get().load(item.profileImageUrl).into(itemView.civ_userImage,object : Callback {
-                override fun onSuccess() {
-                    itemView.shimmer_test.hideShimmer()
-                }
 
-                override fun onError(e: Exception?) {
-                }
-            })
+            shimmer_test.hideShimmer()
+            itemView.txt_userName.text = item.userName
+            civ_userImage.setImageBitmap(item.profilePhoto)
         }
     }
 
     interface Interaction {
-        fun onItemClicked(position: Int,item: ChatUser)
+        fun onItemClicked(position: Int,uid: String)
     }
 
-    private class ChatUserDC : DiffUtil.ItemCallback<ChatUser>() {
+    private class ChatUserDC : DiffUtil.ItemCallback<UsersDB>() {
         override fun areItemsTheSame(
-            oldItem: ChatUser,
-            newItem: ChatUser
+            oldItem: UsersDB,
+            newItem: UsersDB
         ): Boolean {
 
            return true
         }
 
         override fun areContentsTheSame(
-            oldItem: ChatUser,
-            newItem: ChatUser
+            oldItem: UsersDB,
+            newItem: UsersDB
         ): Boolean {
             return true
         }

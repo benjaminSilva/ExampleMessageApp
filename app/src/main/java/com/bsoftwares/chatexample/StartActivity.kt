@@ -2,10 +2,8 @@ package com.bsoftwares.chatexample
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import androidx.activity.viewModels
-import com.bsoftwares.chatexample.ui.HomeActivity
-import com.bsoftwares.chatexample.ui.MainActivity
+import com.bsoftwares.chatexample.ui.home.HomeActivity
 import com.bsoftwares.chatexample.viewModel.UserViewModel
 
 class StartActivity : AppCompatActivity() {
@@ -16,9 +14,9 @@ class StartActivity : AppCompatActivity() {
         super.onStart()
         viewModel.authenticationState.observe(this, androidx.lifecycle.Observer {
             if (it == UserViewModel.AuthenticationState.AUTHENTICATED){
-                startActivity(Intent(this,HomeActivity::class.java))
+                startActivity(Intent(this, HomeActivity::class.java))
             }else{
-                startActivity(Intent(this,MainActivity::class.java))
+                startActivity(Intent(this, MainActivity::class.java))
             }
             finish()
         })

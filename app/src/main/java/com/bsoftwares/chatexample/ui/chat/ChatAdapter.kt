@@ -1,4 +1,4 @@
-package com.bsoftwares.chatexample.ui
+package com.bsoftwares.chatexample.ui.chat
 
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
@@ -8,31 +8,27 @@ import android.view.View.OnClickListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.bsoftwares.chatexample.R
-import com.bsoftwares.chatexample.model.ChatMessage
+import com.bsoftwares.chatexample.database.ChatMessageDB
+import com.bsoftwares.chatexample.database.UsersDB
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.layout_chat_left_message.view.*
 import kotlinx.android.synthetic.main.layout_chat_right_message.view.*
 
 class ChatAdapter(private val interaction: Interaction? = null) :
-    ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessageDC()) {
+    ListAdapter<ChatMessageDB, RecyclerView.ViewHolder>(ChatMessageDC()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when(viewType){
             0 -> {
                 ChatRightViewHolder(
                     LayoutInflater.from(parent.context)
-                        .inflate(R.layout.layout_chat_right_message, parent, false), interaction
+                        .inflate(R.layout.layout_chat_right_message, parent, false)
                 )
             }
             else -> {
                 ChatLeftViewHolder(
                     LayoutInflater.from(parent.context)
-                        .inflate(R.layout.layout_chat_left_message, parent, false), interaction
+                        .inflate(R.layout.layout_chat_left_message, parent, false)
                 )
             }
         }
@@ -41,33 +37,13 @@ class ChatAdapter(private val interaction: Interaction? = null) :
     val uid = FirebaseAuth.getInstance().uid
 
     override fun getItemViewType(position: Int): Int {
-        return if (getItem(position).fromID == uid)
+        return if (getItem(position).senderId == uid)
             0
         else
             1
-        /*val ref = FirebaseDatabase.getInstance().getReference("/messages")
-        ref.addChildEventListener(object : ChildEventListener{
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                val chatMessage = snapshot.getValue(ChatMessage::class.java) ?: return
-                left_right = if (chatMessage.toID== FirebaseAuth.getInstance().uid) 0 else 1
-            }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-            }
-
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-            }
-
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-            }
-        })*/
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int){
-        //holder.bind(getItem(position))
         when (holder.itemViewType){
             0 -> {
                 val viewHolder = holder as ChatRightViewHolder
@@ -80,16 +56,17 @@ class ChatAdapter(private val interaction: Interaction? = null) :
         }
     }
 
-    var datas = listOf<ChatMessage>()
+    var datas = listOf<ChatMessageDB>()
+    var localUsers = listOf<UsersDB>()
 
-    fun swapData(data: List<ChatMessage>) {
+    fun swapData(data: List<ChatMessageDB>, users : List<UsersDB>) {
         datas = data
+        localUsers = users
         submitList(data.toMutableList())
     }
 
     inner class ChatRightViewHolder(
-        itemView: View,
-        private val interaction: Interaction?
+        itemView: View
     ) : RecyclerView.ViewHolder(itemView), OnClickListener {
 
         init {
@@ -97,15 +74,14 @@ class ChatAdapter(private val interaction: Interaction? = null) :
         }
 
         override fun onClick(v: View?) {
-
             if (adapterPosition == RecyclerView.NO_POSITION) return
-
-            val clicked = getItem(adapterPosition)
         }
 
-        fun bind(item: ChatMessage) = with(itemView) {
+        fun bind(item: ChatMessageDB) = with(itemView) {
             itemView.txt_message_right.text = item.text
-            Picasso.get().load(HomeActivity.currentUser!!.profileImageUrl).into(civ_userImage_chat_message_right)
+            val user =  localUsers.find { it.userUID == uid }
+            val bitmap = user?.profilePhoto
+            civ_userImage_chat_message_right.setImageBitmap(bitmap)
         }
     }
 
@@ -115,8 +91,7 @@ class ChatAdapter(private val interaction: Interaction? = null) :
 
 
     inner class ChatLeftViewHolder(
-        itemView: View,
-        private val interaction: Interaction?
+        itemView: View
     ) : RecyclerView.ViewHolder(itemView), OnClickListener {
 
         init {
@@ -125,14 +100,13 @@ class ChatAdapter(private val interaction: Interaction? = null) :
 
         override fun onClick(v: View?) {
 
-            if (adapterPosition == RecyclerView.NO_POSITION) return
+            if (adapterPosition == RecyclerView.NO_POSITION) return }
 
-            val clicked = getItem(adapterPosition)
-        }
-
-        fun bind(item: ChatMessage) = with(itemView) {
+        fun bind(item: ChatMessageDB) = with(itemView) {
             itemView.txt_message_left.text = item.text
-            Picasso.get().load(ChatActivity.toUser!!.profileImageUrl).into(civ_userImage_chat_message_left)
+            val user =  localUsers.find { it.userUID == item.senderId }
+            val bitmap = user?.profilePhoto
+            civ_userImage_chat_message_left.setImageBitmap(bitmap)
         }
     }
 
@@ -142,19 +116,19 @@ class ChatAdapter(private val interaction: Interaction? = null) :
 
     }
 
-    private class ChatMessageDC : DiffUtil.ItemCallback<ChatMessage>() {
+    private class ChatMessageDC : DiffUtil.ItemCallback<ChatMessageDB>() {
         override fun areItemsTheSame(
-            oldItem: ChatMessage,
-            newItem: ChatMessage
+            oldItem: ChatMessageDB,
+            newItem: ChatMessageDB
         ): Boolean {
             return oldItem == newItem
         }
 
         override fun areContentsTheSame(
-            oldItem: ChatMessage,
-            newItem: ChatMessage
+            oldItem: ChatMessageDB,
+            newItem: ChatMessageDB
         ): Boolean {
-            return oldItem.equals(newItem)
+            return oldItem == newItem
         }
     }
 }

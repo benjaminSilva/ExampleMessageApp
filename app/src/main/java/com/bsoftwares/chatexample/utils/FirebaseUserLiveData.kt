@@ -78,10 +78,8 @@ object ImageResizer {
 
     fun generateThumb(bitmap: Bitmap, THUMB_SIZE: Int): Bitmap {
         val ratioSquare: Double
-        val bitmapHeight: Int
-        val bitmapWidth: Int
-        bitmapHeight = bitmap.height
-        bitmapWidth = bitmap.width
+        val bitmapHeight: Int = bitmap.height
+        val bitmapWidth: Int = bitmap.width
         ratioSquare = (bitmapHeight * bitmapWidth / THUMB_SIZE).toDouble()
         if (ratioSquare <= 1) return bitmap
         val ratio = Math.sqrt(ratioSquare)

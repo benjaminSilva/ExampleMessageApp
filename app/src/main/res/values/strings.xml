@@ -12,6 +12,7 @@
     <string name="Title">Messaging App Example</string>
     <string name="already_have_an_account">Already have an account?</string>
     <string name="don_t_have_an_account_register_here">Don\'t have an account? Register here</string>
+    <string name="reply">Reply</string>
 
     !--Error Messages--!
     <string name="error_characters">The given password is invalid. [ Password should be at least 6 characters ]</string>
@@ -22,6 +23,7 @@
     <string name="error_wrong_password">Wrong password</string>
     <string name="error_email_required">Email is required</string>
     <string name="error_password_required">Password is required</string>
+    <string name="error_loading_messages">Error Loading Messages</string>
 
     |--Button Texts--|
     <string name="select_photo">Select Photo</string>

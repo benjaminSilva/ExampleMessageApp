@@ -1,4 +1,4 @@
-package com.bsoftwares.chatexample.ui
+package com.bsoftwares.chatexample
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

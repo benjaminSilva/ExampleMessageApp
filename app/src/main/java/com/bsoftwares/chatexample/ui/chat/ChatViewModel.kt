@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import androidx.core.app.NotificationManagerCompat
+import com.bsoftwares.chatexample.utils.observeOnce
 
 class ChatViewModel (application: Application) : AndroidViewModel(application) {
 
@@ -31,9 +32,13 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
 
     val users = repository.users
 
-    val otherUser = MutableLiveData<ChatUser>()
+    /*val otherUser = MutableLiveData<ChatUser>()
 
-    val currentUser = MutableLiveData<ChatUser>()
+    val currentUser = MutableLiveData<ChatUser>()*/
+
+    val otherUser = repository.otherUser
+
+    val currentUser = repository.currentUser
 
     val messageSent = MutableLiveData<Boolean>()
 
@@ -41,14 +46,14 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
 
 
     fun fetchOtherUser(otherUid: String) {
-
-        FirebaseDatabase.getInstance().getReference("users/$otherUid").addValueEventListener(object : ValueEventListener {
+        repository.fetchOtherUser(otherUid)
+        /*FirebaseDatabase.getInstance().getReference("users/$otherUid").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 otherUser.value = snapshot.getValue(ChatUser::class.java)
             }
             override fun onCancelled(error: DatabaseError) {
             }
-        })
+        })*/
     }
 
     val currentAndOtherUserAndMessages : LiveData<Triple<ChatUser, ChatUser,List<ChatMessageDB>>> =
@@ -95,7 +100,8 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
         }
 
     fun fetchCurrentUser() {
-        val uid = FirebaseAuth.getInstance().uid
+        repository.fetchCurrentUser()
+        /*val uid = FirebaseAuth.getInstance().uid
         val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -103,11 +109,12 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
             }
             override fun onCancelled(error: DatabaseError) {
             }
-        })
+        })*/
     }
 
     fun loadMessages(otherUid: String) {
-        val myId = FirebaseAuth.getInstance().uid!!
+        repository.loadMessages(otherUid)
+        /*val myId = FirebaseAuth.getInstance().uid!!
         val ref = FirebaseDatabase.getInstance().getReference("/messages/$myId/$otherUid")
         val messages = mutableListOf<ChatMessage>()
         ref.addValueEventListener(object : ValueEventListener {
@@ -124,15 +131,14 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
             }
             override fun onCancelled(error: DatabaseError) {
             }
-        })
+        })*/
     }
 
-    fun checkUserBeforeMessaging(uid : String, message : String){
-        fetchOtherUser(uid)
-        sendMessage(message)
+    fun sendMessage(message : String){
+        repository.sendMessage(message)
     }
 
-    fun sendMessage(message : String) {
+    /*fun sendMessage(message : String) {
         val myUser = currentUser.value
         val otherUser = otherUser.value
         val myId = FirebaseAuth.getInstance().uid!!
@@ -197,7 +203,7 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
                 sendNotification(it)
             }
         messageSent.postValue(true)
-    }
+    }*/
 
     fun updateNotification() {
         val builder = NotificationCompat.Builder(getApplication(),Constants.CHANNEL_ID)
@@ -224,5 +230,20 @@ class ChatViewModel (application: Application) : AndroidViewModel(application) {
         }
     }
 
+    val currentUserAndOtherUser : LiveData<Pair<ChatUser, ChatUser>> =
+        object: MediatorLiveData<Pair<ChatUser, ChatUser>>() {
+            var user: ChatUser? = null
+            var message: ChatUser? = null
+            init {
+                addSource(currentUser) { users ->
+                    this.user = users
+                    message?.let { value = users to it }
+                }
+                addSource(otherUser) { message ->
+                    this.message = message
+                    user?.let { value = it to message }
+                }
+            }
+        }
 
 }

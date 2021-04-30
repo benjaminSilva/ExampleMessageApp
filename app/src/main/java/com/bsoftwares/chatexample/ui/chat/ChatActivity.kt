@@ -1,20 +1,26 @@
 package com.bsoftwares.chatexample.ui.chat
 
+import android.app.NotificationManager
 import android.app.RemoteInput
+import android.content.Context
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.*
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bsoftwares.chatexample.R
+import com.bsoftwares.chatexample.broadcast.DirectMessageReply
 import com.bsoftwares.chatexample.utils.keyboardanimation.ControlFocusInsetsAnimationCallback
 import com.bsoftwares.chatexample.utils.keyboardanimation.RootViewDeferringInsetsCallback
 import com.bsoftwares.chatexample.utils.keyboardanimation.TranslateDeferringInsetsAnimationCallback
 import com.bsoftwares.chatexample.utils.Constants
 import com.bsoftwares.chatexample.utils.createString
+import com.google.firebase.firestore.auth.User
 import kotlinx.android.synthetic.main.activity_chat.*
 
 
@@ -34,11 +40,15 @@ class ChatActivity : AppCompatActivity() {
 
     var isRegistered = false
 
+    lateinit var reciever : DirectMessageReply
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
         otherUid = intent.getStringExtra(Constants.USER_KEY)!!
+
+        reciever = DirectMessageReply()
 
         viewModel.loadMessages(otherUid)
         viewModel.fetchOtherUser(otherUid)
@@ -47,19 +57,20 @@ class ChatActivity : AppCompatActivity() {
         handleKeyboardAnimation()
         setupRecyclerView()
         setupClicksAndWindow()
-
     }
 
     private fun setupClicksAndWindow() {
         et_txtMessage.setOnKeyListener { _, keycode, event ->
             if ((event.action == KeyEvent.ACTION_DOWN) && (keycode == KeyEvent.KEYCODE_ENTER)) {
                 viewModel.sendMessage(createString(et_txtMessage))
+                et_txtMessage.text.clear()
             }
             false
         }
 
         btn_sendMessage.setOnClickListener {
             viewModel.sendMessage(createString(et_txtMessage))
+            et_txtMessage.text.clear()
         }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -83,29 +94,31 @@ class ChatActivity : AppCompatActivity() {
 
     private fun createObservers() {
         viewModel.usersAndMessages.observe(this, {(users , messages) ->
-            chatAdapter.swapData(messages,users)
+            chatAdapter.swapData(messages.reversed(),users)
         })
-
-        viewModel.messageSent.observe(this, { mensagemEnviada ->
-            if (mensagemEnviada)
-                et_txtMessage.text.clear()
-        })
-
-        viewModel.messages.observe(this, {
+        /*viewModel.messages.observe(this, {
             if (!viewModel.users.value.isNullOrEmpty())
                 chatAdapter.swapData(it,viewModel.users.value!!)
-        })
-        viewModel.currentAndOtherUserAndMessages.observe(this,{
-            handleIntent()
-        })
+        })*/
 
         viewModel.otherUser.observe(this, Observer {
             supportActionBar!!.title = it.username
+            clearNotifications(it.uid)
         })
+    }
 
+    private fun clearNotifications(uid: String) {
+        val notificationManager = NotificationManagerCompat.from(this).cancelAll()
+    }
 
+    override fun onStart() {
+        super.onStart()
+        registerReceiver(reciever, IntentFilter("quick.reply.input"))
+    }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(reciever)
     }
 
     fun handleKeyboardAnimation(){
@@ -139,14 +152,5 @@ class ChatActivity : AppCompatActivity() {
             ControlFocusInsetsAnimationCallback(et_txtMessage)
         )
 
-    }
-
-    fun handleIntent(){
-        val remoteInput = RemoteInput.getResultsFromIntent(intent)
-        if (remoteInput!= null){
-            val inputString = remoteInput.getCharSequence(Constants.KEY_TEXT_REPLY).toString()
-            viewModel.sendMessage(inputString)
-            viewModel.updateNotification()
-        }
     }
 }

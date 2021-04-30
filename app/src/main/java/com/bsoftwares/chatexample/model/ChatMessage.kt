@@ -16,39 +16,22 @@ data class ChatMessage(
     val senderId: String = "",
     val recieverId: String = "",
     val timeStamp: Long = -1,
-    val position: Int = -1,
     val fromUserName: String = "",
-    val toUserToken: String = "",
     val profilePhotoURL: String = "",
     val chatId : String = ""
 )
 
-fun ChatMessage.toDatabase(): ChatMessageDB {
-    return ChatMessageDB(
-        messageID = id,
-        text = text,
-        senderId = senderId,
-        fromUserName = fromUserName,
-        recieverId = recieverId,
-        timeStamp = timeStamp,
-        position = position,
-        sendTokenTo = toUserToken,
-        chatId = chatId
-    )
-}
-
 fun List<ChatMessage>.toDatabase(): Array<ChatMessageDB> {
-    return map {
+    return mapIndexed { idx , value ->
         ChatMessageDB(
-            messageID = it.id,
-            text = it.text,
-            senderId = it.senderId,
-            fromUserName = it.fromUserName,
-            recieverId = it.recieverId,
-            timeStamp = it.timeStamp,
-            sendTokenTo = it.toUserToken,
-            position = it.position,
-            chatId = it.chatId
+            messageID = value.id,
+            text = value.text,
+            senderId = value.senderId,
+            fromUserName = value.fromUserName,
+            recieverId = value.recieverId,
+            timeStamp = value.timeStamp,
+            position = idx,
+            chatId = value.chatId
         )
     }.toTypedArray()
 }

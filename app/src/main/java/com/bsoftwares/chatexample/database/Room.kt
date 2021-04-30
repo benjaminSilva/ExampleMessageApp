@@ -19,6 +19,9 @@ interface ChatDao{
     @Query("select * from usersdb")
     fun getImagesList() : LiveData<List<UsersDB>>
 
+    @Query("select * from usersdb WHERE userUID= :userUid")
+    fun getUserUid(userUid : String) : LiveData<UsersDB>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun inserirMessages(vararg settings : ChatMessageDB)
 
@@ -33,7 +36,6 @@ abstract class ChatDataBase : RoomDatabase() {
 }
 
 private lateinit var INSTANCE : ChatDataBase
-
 
 fun getDataBase(context: Context) : ChatDataBase{
     if(!::INSTANCE.isInitialized)

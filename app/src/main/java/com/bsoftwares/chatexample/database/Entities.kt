@@ -16,7 +16,6 @@ data class ChatMessageDB(
     val recieverId : String,
     val timeStamp : Long,
     val fromUserName : String,
-    val sendTokenTo : String,
     val position : Int,
     val chatId : String
 )

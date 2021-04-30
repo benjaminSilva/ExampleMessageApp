@@ -23,6 +23,9 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import com.bsoftwares.chatexample.model.PushNotification
 import com.bsoftwares.chatexample.network.RetrofitInstance
 import com.google.gson.Gson
@@ -124,4 +127,13 @@ fun sendNotification(notification: PushNotification) = CoroutineScope(Dispatcher
     } catch (e: Exception) {
         Log.e(TAG, e.toString())
     }
+}
+
+fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+    observe(lifecycleOwner, object : Observer<T> {
+        override fun onChanged(t: T?) {
+            observer.onChanged(t)
+            removeObserver(this)
+        }
+    })
 }

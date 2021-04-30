@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val applicationForContext = application
     private val viewModelJob = SupervisorJob()
     private val viewModelScope = CoroutineScope(viewModelJob + Dispatchers.Main)
     private val dataBase = getDataBase(application)
@@ -40,7 +39,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val profilePictures = repository.users
 
     val currentUser = MutableLiveData<ChatUser>()
-
 
     val picturesAndMessages : LiveData<Pair<List<UsersDB>, List<LatestMessageDB>>> =
         object: MediatorLiveData<Pair<List<UsersDB>, List<LatestMessageDB>>>() {
@@ -117,7 +115,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }catch (t:Throwable){
             Log.d("DEU RUIM",t.message.toString())
         }
-
     }
 
     class Factory(val app: Application) : ViewModelProvider.Factory {
@@ -129,7 +126,4 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             throw IllegalArgumentException("Unable to construct ViewModel")
         }
     }
-
-
-
 }

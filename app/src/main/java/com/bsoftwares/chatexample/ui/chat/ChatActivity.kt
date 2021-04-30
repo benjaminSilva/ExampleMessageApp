@@ -22,6 +22,7 @@ import com.bsoftwares.chatexample.utils.Constants
 import com.bsoftwares.chatexample.utils.createString
 import com.google.firebase.firestore.auth.User
 import kotlinx.android.synthetic.main.activity_chat.*
+import java.security.Key
 
 
 class ChatActivity : AppCompatActivity() {
@@ -61,9 +62,11 @@ class ChatActivity : AppCompatActivity() {
 
     private fun setupClicksAndWindow() {
         et_txtMessage.setOnKeyListener { _, keycode, event ->
-            if ((event.action == KeyEvent.ACTION_DOWN) && (keycode == KeyEvent.KEYCODE_ENTER)) {
-                viewModel.sendMessage(createString(et_txtMessage))
-                et_txtMessage.text.clear()
+            if (keycode == KeyEvent.KEYCODE_ENTER){
+                when(event.action) {
+                    KeyEvent.ACTION_UP -> et_txtMessage.text.clear()
+                    KeyEvent.ACTION_DOWN -> viewModel.sendMessage(createString(et_txtMessage))
+                }
             }
             false
         }

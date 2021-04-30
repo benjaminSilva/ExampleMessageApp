@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.toIcon
 import coil.imageLoader
 import com.bsoftwares.chatexample.R
@@ -38,9 +39,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         var notificationsSent = LinkedHashMap<NotificationData, Person>()
     }
 
+
+
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
+
 
         val notificationdata = NotificationData(
             title = remoteMessage.data["title"]!!,
@@ -127,37 +131,6 @@ fun openChatWithUid(uid: String, context: Context): PendingIntent {
     }
 
     return PendingIntent.getActivity(context, 0, openChatIntent, 0)
-
-}
-
-@RequiresApi(Build.VERSION_CODES.Q)
-fun createShortcut(context: Context, userData: NotificationData, bitmap: Bitmap,shortcutManager : ShortcutManager) {
-    // Create a dynamic shortcut for each of the contacts.
-    // The same shortcut ID will be used when we show a bubble notification.
-
-
-    val build = ShortcutInfo.Builder(context, userData.userUid)
-        .setLocusId(LocusId(userData.userUid))
-        .setActivity(ComponentName(context, ChatActivity::class.java))
-        .setShortLabel(userData.title)
-        .setIcon(bitmap.toIcon())
-        .setLongLived(true)
-        .setCategories(setOf("com.example.android.bubbles.category.TEXT_SHARE_TARGET"))
-        .setIntent(
-            Intent(context, ChatActivity::class.java)
-                .setAction(Intent.ACTION_VIEW)
-        )
-        .setPerson(
-            Person.Builder()
-                .setName(userData.title)
-                .setIcon(bitmap.toIcon())
-                .build()
-        )
-        .build()
-
-    val shortcuts = mutableListOf(build)
-
-    shortcutManager.addDynamicShortcuts(shortcuts)
 
 }
 

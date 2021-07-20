@@ -3,10 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.bsoftwares.chatexample">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -15,13 +14,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:name=".services.MyFirebaseMessagingService"
+        <service
+            android:name=".services.MyFirebaseMessagingService"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".ui.newMessage.NewMessageActivity"
             android:label="New Message">
@@ -40,16 +41,18 @@
         </activity>
         <activity
             android:name=".ui.home.HomeActivity"
-            android:label="Chats"/>
+            android:label="Chats" />
         <activity
             android:name=".ui.chat.ChatActivity"
-            android:label="Chats"/>
+            android:label="Chats"
+            android:parentActivityName=".ui.home.HomeActivity" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"/>
-        <receiver android:name=".broadcast.DirectMessageReply"/>
-        <receiver android:name=".broadcast.NotificationDismissed"/>
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <receiver android:name=".broadcast.DirectMessageReply" />
+        <receiver android:name=".broadcast.NotificationDismissed" />
     </application>
 
 </manifest>

@@ -18,13 +18,18 @@ package com.bsoftwares.chatexample.utils
 
 import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.*
 import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.MainThread
+import androidx.annotation.Nullable
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.bsoftwares.chatexample.model.PushNotification
 import com.bsoftwares.chatexample.network.RetrofitInstance
@@ -32,6 +37,11 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 private val tmpIntArr = IntArray(2)
@@ -81,7 +91,8 @@ private fun hiddenSuppressLayout(group: ViewGroup, suppress: Boolean) {
     }
 }
 
-fun getCircleBitmap(bitmap: Bitmap): Bitmap? {
+@RequiresApi(Build.VERSION_CODES.P)
+fun getCircleImageFromBitmap(bitmap: Bitmap): Bitmap {
     val output: Bitmap
     val srcRect: Rect
     val dstRect: Rect
@@ -129,11 +140,39 @@ fun sendNotification(notification: PushNotification) = CoroutineScope(Dispatcher
     }
 }
 
-fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
-    observe(lifecycleOwner, object : Observer<T> {
-        override fun onChanged(t: T?) {
-            observer.onChanged(t)
-            removeObserver(this)
-        }
-    })
+fun saveImageToInternalStorage(bitmap: Bitmap, context: Context, userUid: String): String {
+    // Get the image from drawable resource as drawable object
+
+    // Get the bitmap from drawable object
+
+    // Get the context wrapper instance
+    val wrapper = ContextWrapper(context)
+
+    // Initializing a new file
+    // The bellow line return a directory in internal storage
+    var file = wrapper.getDir("images", Context.MODE_PRIVATE)
+
+
+    // Create a file to save the image
+    file = File(file, "${userUid}.jpg")
+
+    try {
+        // Get the file output stream
+        val stream: OutputStream = FileOutputStream(file)
+
+        // Compress bitmap
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+
+        // Flush the stream
+        stream.flush()
+
+        // Close stream
+        stream.close()
+    } catch (e: IOException){ // Catch the exception
+        e.printStackTrace()
+    }
+
+    // Return the saved image uri
+    return file.absolutePath
+    //return Uri.parse(file.absolutePath)
 }

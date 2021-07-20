@@ -7,6 +7,6 @@ import kotlinx.android.parcel.Parcelize
 data class NotificationData (
     val title : String,
     val message : String,
-    val profileURL : String,
-    val userUid : String
+    val userUid : String,
+    val profileURL : String
 ) : Parcelable

@@ -1,6 +1,7 @@
 package com.bsoftwares.chatexample.ui.newMessage
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,17 +14,12 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
-class NewMessageViewModel(application: Application) : AndroidViewModel(application) {
+class NewMessageViewModel(context: Application) : AndroidViewModel(context) {
 
-    private val viewModelJob = SupervisorJob()
-    private val viewModelScope = CoroutineScope(viewModelJob + Dispatchers.Main)
-    private val dataBase = getDataBase(application)
-    private val repository = Repository(dataBase)
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val repository = Repository(context)
 
     val users = repository.users
 
@@ -41,7 +37,7 @@ class NewMessageViewModel(application: Application) : AndroidViewModel(applicati
                     }
                 }
                 viewModelScope.launch {
-                    repository.loadUsers(users.toUserDB(getApplication()))
+                        repository.loadUsers(users.toUserDB(context = getApplication()))
                 }
             }
 

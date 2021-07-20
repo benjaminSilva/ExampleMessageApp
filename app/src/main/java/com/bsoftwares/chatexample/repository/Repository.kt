@@ -4,14 +4,8 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import com.bsoftwares.chatexample.database.ChatDataBase
-import com.bsoftwares.chatexample.database.ChatMessageDB
-import com.bsoftwares.chatexample.database.LatestMessageDB
-import com.bsoftwares.chatexample.database.UsersDB
+import androidx.lifecycle.*
+import com.bsoftwares.chatexample.database.*
 import com.bsoftwares.chatexample.model.*
 import com.bsoftwares.chatexample.services.updateNotification
 import com.bsoftwares.chatexample.utils.sendNotification
@@ -21,8 +15,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import java.io.IOException
 
-class Repository(private val database: ChatDataBase) {
+class Repository(context: Context) {
+
+    val database = getDataBase(context)
 
     private val viewModelJob = SupervisorJob()
 
@@ -34,9 +32,9 @@ class Repository(private val database: ChatDataBase) {
 
     val chatId = MutableLiveData<String>()
 
-    val otherUserUid = MutableLiveData<String>()
+    val otherUserUid = MutableLiveData<String?>()
 
-    val currentUserUid = MutableLiveData<String>()
+    val currentUserUid = MutableLiveData<String?>()
 
     val otherUser = MutableLiveData<ChatUser>()
 
@@ -54,10 +52,12 @@ class Repository(private val database: ChatDataBase) {
         database.dao.getUserUid(currentUserUid)
     }
 
-    val currentUserAndOtherUser : LiveData<Pair<ChatUser, ChatUser>> =
-        object: MediatorLiveData<Pair<ChatUser, ChatUser>>() {
+
+    val currentUserAndOtherUser: LiveData<Pair<ChatUser, ChatUser>> =
+        object : MediatorLiveData<Pair<ChatUser, ChatUser>>() {
             var user: ChatUser? = null
             var message: ChatUser? = null
+
             init {
                 addSource(currentUser) { users ->
                     this.user = users
@@ -70,18 +70,51 @@ class Repository(private val database: ChatDataBase) {
             }
         }
 
-    val currentUserAndOtherUserDB : LiveData<Pair<UsersDB, UsersDB>> =
-        object: MediatorLiveData<Pair<UsersDB, UsersDB>>() {
+
+    val currenOtherAndMessages: LiveData<Triple<UsersDB, UsersDB, List<ChatMessageDB>>> =
+        object : MediatorLiveData<Triple<UsersDB, UsersDB, List<ChatMessageDB>>>() {
+            var current: UsersDB? = null
+            var other: UsersDB? = null
+            var mensagens : List<ChatMessageDB>? = null
+            fun checkNull(){
+                if (current!= null && other!= null && !mensagens.isNullOrEmpty()){
+                    value = Triple(current!!,other!!,mensagens!!)
+                }
+            }
+            init {
+                addSource(getCurrentUser){ result ->
+                    current = result
+                    checkNull()
+                }
+                addSource(getOtherUser) { result ->
+                    other = result
+                    checkNull()
+                }
+                addSource(chatMessages) { result ->
+                    mensagens = result
+                    checkNull()
+                }
+            }
+        }
+
+    val currentUserAndOtherUserDB: LiveData<Pair<UsersDB, UsersDB>> =
+        object : MediatorLiveData<Pair<UsersDB, UsersDB>>() {
             var user: UsersDB? = null
             var message: UsersDB? = null
+
             init {
                 addSource(getCurrentUser) { users ->
                     this.user = users
-                    message?.let { value = users to it }
-                }
-                addSource(getOtherUser) { message ->
-                    this.message = message
-                    user?.let { value = it to message }
+                    message?.let {
+                        value = users to it
+
+                    }
+                    addSource(getOtherUser) { message ->
+                        this.message = message
+                        user?.let {
+                            value = it to message
+                        }
+                    }
                 }
             }
         }
@@ -98,7 +131,8 @@ class Repository(private val database: ChatDataBase) {
     suspend fun loadUsers(users: Array<UsersDB>) {
         withContext(Dispatchers.IO) {
             if (users.isNotEmpty()) {
-                database.dao.insertImages(*users)
+                val user = users
+                database.dao.insertImages(*user)
             }
         }
     }
@@ -111,78 +145,89 @@ class Repository(private val database: ChatDataBase) {
         }
     }
 
-    fun sendMessage(message : String){
+    fun sendMessage(message: String) {
         try {
-            val messages = chatMessages.value
             val myUser = currentUser.value!!
             val otherUser = otherUser.value!!
-            val senderRef = FirebaseDatabase.getInstance().getReference("/messages/${myUser.uid}/${otherUser.uid}").push()
-            val receiverRef = FirebaseDatabase.getInstance().getReference("/messages/${otherUser.uid}/${myUser.uid}").push()
-            val latestMessageRef = FirebaseDatabase.getInstance().getReference("/latestMessage/${myUser.uid}/${otherUser.uid}")
-            val latestMessageToRef = FirebaseDatabase.getInstance().getReference("/latestMessage/${otherUser.uid}/${myUser.uid}")
+
+            val senderRef = FirebaseDatabase.getInstance()
+                .getReference("/messages/${myUser.uid}/${otherUser.uid}").push()
+            val receiverRef = FirebaseDatabase.getInstance()
+                .getReference("/messages/${otherUser.uid}/${myUser.uid}").push()
+            val latestMessageRef = FirebaseDatabase.getInstance()
+                .getReference("/latestMessage/${myUser.uid}/${otherUser.uid}")
+            val latestMessageToRef = FirebaseDatabase.getInstance()
+                .getReference("/latestMessage/${otherUser.uid}/${myUser.uid}")
             val chatMessageSender = ChatMessage(
-                senderRef.key!!,
+                id = senderRef.key!!,
                 text = message,
                 senderId = myUser.uid,
                 recieverId = otherUser.uid,
                 timeStamp = System.currentTimeMillis(),
                 fromUserName = myUser.username,
-                chatId = "$myUser.uid$otherUser.uid"
+                chatId = "${myUser.uid}${otherUser.uid}"
             )
             val chatMessageReciever = ChatMessage(
-                senderRef.key!!,
+                id = senderRef.key!!,
                 text = message,
                 senderId = myUser.uid,
                 recieverId = otherUser.uid,
                 timeStamp = System.currentTimeMillis(),
                 fromUserName = myUser.username,
-                chatId = "$otherUser.uid$myUser.uid"
+                chatId = "${otherUser.uid}${myUser.uid}"
             )
             val latestMessageSender = LatestChatMessage(
-                senderRef.key!!,
+                messageID = senderRef.key!!,
                 text = message,
                 myId = myUser.uid,
                 otherId = otherUser.uid,
                 timeStamp = System.currentTimeMillis(),
-                fromUserName = otherUser.username,
-                profilePhotoURL = otherUser.profileImageUrl
+                fromUserName = otherUser.username
             )
             val latestMessageReciever = LatestChatMessage(
-                senderRef.key!!,
+                messageID = senderRef.key!!,
                 text = message,
                 myId = otherUser.uid,
                 otherId = myUser.uid,
                 timeStamp = System.currentTimeMillis(),
-                fromUserName = myUser.username,
-                profilePhotoURL = myUser.profileImageUrl
+                fromUserName = myUser.username
             )
             senderRef.setValue(chatMessageSender)
             receiverRef.setValue(chatMessageReciever)
             latestMessageRef.setValue(latestMessageSender)
             latestMessageToRef.setValue(latestMessageReciever)
-            PushNotification(NotificationData(myUser.username, message,myUser.profileImageUrl,myUser.uid), otherUser.token)
+            PushNotification(
+                NotificationData(
+                    myUser.username,
+                    message,
+                    myUser.uid,
+                    myUser.profileImageUrl
+                ), otherUser.token
+            )
                 .also {
                     sendNotification(it)
                 }
-        }catch (t:Throwable){
-            Log.e("ERROR",t.message.toString())
+        } catch (t: IOException) {
+            Log.e("ERROR", t.message.toString())
         }
 
     }
 
-    fun fetchCurrentUser(){
+    fun fetchCurrentUser() {
         val uid = FirebaseAuth.getInstance().uid
+        currentUserUid.postValue(uid!!)
         val ref = FirebaseDatabase.getInstance().getReference("/users/$uid")
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 currentUser.value = snapshot.getValue(ChatUser::class.java)
             }
+
             override fun onCancelled(error: DatabaseError) {
             }
         })
     }
 
-    fun loadMessages(otherUid : String){
+    fun loadMessages(otherUid: String) {
         val myId = FirebaseAuth.getInstance().uid!!
         val ref = FirebaseDatabase.getInstance().getReference("/messages/$myId/$otherUid")
         val messages = mutableListOf<ChatMessage>()
@@ -198,34 +243,35 @@ class Repository(private val database: ChatDataBase) {
                     loadMessages(messages.toDatabase())
                 }
             }
+
             override fun onCancelled(error: DatabaseError) {
             }
         })
     }
 
-    fun fetchOtherUser(otherUid : String){
-        FirebaseDatabase.getInstance().getReference("users/$otherUid").addValueEventListener(object :
-            ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                otherUser.value = snapshot.getValue(ChatUser::class.java)
-            }
-            override fun onCancelled(error: DatabaseError) {
-            }
-        })
+    fun fetchOtherUser(otherUid: String) {
+        otherUserUid.postValue(otherUid)
+        FirebaseDatabase.getInstance().getReference("users/$otherUid")
+            .addValueEventListener(object :
+                ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    otherUser.value = snapshot.getValue(ChatUser::class.java)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                }
+            })
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    fun sendMessageInRepository(title: String, uid: String?, context: Context) {
+    fun sendMessageInRepository(message: String, uid: String?, context: Context) {
         fetchCurrentUser()
         fetchOtherUser(uid!!)
-        currentUserAndOtherUser.observeForever { (current,other) ->
-            otherUserUid.postValue(otherUser.value!!.uid)
-            currentUserUid.postValue(current.uid)
-            chatId.postValue(currentUser.value!!.uid.plus(otherUser.value!!.uid))
-            sendMessage(title)
+        currentUserAndOtherUser.observeForever { (current, other) ->
+            chatId.postValue(current.uid.plus(other.uid))
+            sendMessage(message)
         }
-        currentUserAndOtherUserDB.observeForever { (current,other) ->
-            updateNotification(current,other,title,context)
+        currentUserAndOtherUserDB.observeForever { (current, other) ->
+            updateNotification(current, other, message, context)
         }
     }
 }

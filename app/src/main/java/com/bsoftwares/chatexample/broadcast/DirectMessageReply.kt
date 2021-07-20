@@ -22,13 +22,15 @@ class DirectMessageReply : BroadcastReceiver() {
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onReceive(context: Context?, intent: Intent?) {
-        val dataBase = getDataBase(context!!)
-        val repository = Repository(dataBase)
-        val remoteInput = RemoteInput.getResultsFromIntent(intent)
-        if (remoteInput!=null){
-            val title = remoteInput.getCharSequence(Constants.KEY_TEXT_REPLY).toString()
-            val uid = intent!!.getStringExtra(Constants.USER_KEY)
-            repository.sendMessageInRepository(title,uid,context)
+        context?.let {
+            val repository = Repository(it)
+            val remoteInput = RemoteInput.getResultsFromIntent(intent)
+            if (remoteInput!=null){
+                val title = remoteInput.getCharSequence(Constants.KEY_TEXT_REPLY).toString()
+                val uid = intent!!.getStringExtra(Constants.USER_KEY)
+                //ChatViewModel(it).loadMessagesFromBroadcast(context = it,message = title,otherUid = uid!!)
+                repository.sendMessageInRepository(title,uid,it)
+            }
         }
     }
 }

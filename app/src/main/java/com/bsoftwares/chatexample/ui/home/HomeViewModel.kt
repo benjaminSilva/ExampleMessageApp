@@ -1,49 +1,55 @@
 package com.bsoftwares.chatexample.ui.home
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.*
-import androidx.navigation.fragment.findNavController
-import com.bsoftwares.chatexample.R
 import com.bsoftwares.chatexample.database.LatestMessageDB
 import com.bsoftwares.chatexample.database.UsersDB
-import com.bsoftwares.chatexample.database.getDataBase
-import com.bsoftwares.chatexample.database.toProfileImage
 import com.bsoftwares.chatexample.model.ChatUser
 import com.bsoftwares.chatexample.model.LatestChatMessage
 import com.bsoftwares.chatexample.model.toLatestDatabase
 import com.bsoftwares.chatexample.model.toUserDB
 import com.bsoftwares.chatexample.repository.Repository
-import com.bsoftwares.chatexample.ui.RegisterFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
+class HomeViewModel(val application: Context) : ViewModel() {
 
-    private val viewModelJob = SupervisorJob()
-    private val viewModelScope = CoroutineScope(viewModelJob + Dispatchers.Main)
-    private val dataBase = getDataBase(application)
-    private val repository = Repository(dataBase)
+    val job = SupervisorJob()
+
+    private val viewModelScope = CoroutineScope(job + Dispatchers.Main)
+    private val repository = Repository(application)
 
     val latestMessages = repository.latestMessages
 
     val profilePictures = repository.users
 
-    val currentUser = MutableLiveData<ChatUser>()
+    val chatId = repository.chatId
 
-    val picturesAndMessages : LiveData<Pair<List<UsersDB>, List<LatestMessageDB>>> =
-        object: MediatorLiveData<Pair<List<UsersDB>, List<LatestMessageDB>>>() {
+    val messages = repository.chatMessages
+
+    val data = repository.currenOtherAndMessages
+
+    val currentUserUid = repository.currentUserUid
+
+    val otherUserUid = repository.otherUserUid
+
+
+
+
+    val picturesAndMessages: LiveData<Pair<List<UsersDB>, List<LatestMessageDB>>> =
+        object : MediatorLiveData<Pair<List<UsersDB>, List<LatestMessageDB>>>() {
             var pictures: List<UsersDB>? = null
             var messages: List<LatestMessageDB>? = null
+
             init {
                 addSource(profilePictures) { pictures ->
                     this.pictures = pictures
@@ -55,7 +61,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
-
 
     fun loadLatestMessages() {
         try {
@@ -97,7 +102,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 viewModelScope.launch {
-                    repository.loadUsers(users.toUserDB(getApplication()))
+                    repository.loadUsers(users.toUserDB(context = application))
                 }
             }
 
@@ -107,13 +112,19 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         })
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        job.cancel()
+    }
+
     fun updateToken() {
         try {
             val uid = FirebaseAuth.getInstance().uid
-            Log.d("TOKEN",FirebaseMessaging.getInstance().token.result!!)
-            FirebaseDatabase.getInstance().reference.child("users").child(uid.toString()).child("token").setValue(FirebaseMessaging.getInstance().token.result!!)
-        }catch (t:Throwable){
-            Log.d("DEU RUIM",t.message.toString())
+            Log.d("TOKEN", FirebaseMessaging.getInstance().token.result!!)
+            FirebaseDatabase.getInstance().reference.child("users").child(uid.toString())
+                .child("token").setValue(FirebaseMessaging.getInstance().token.result!!)
+        } catch (t: Throwable) {
+            Log.d("DEU RUIM", t.message.toString())
         }
     }
 

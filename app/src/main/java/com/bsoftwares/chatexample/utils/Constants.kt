@@ -7,6 +7,8 @@ class Constants {
         const val CONTENT_TYPE = "application/json"
         const val KEY_TEXT_REPLY = "key_text_reply"
         const val USER_KEY = "USER_KEY"
-        const val CHANNEL_ID = "CHANNEL_ID"
+        const val CURRENT_KEY = "CURRENT_KEY"
+        const val OTHER_KEY = "OTHER_KEY"
+        const val MESSAGES_KEY = "MESSAGES_KEY"
     }
 }

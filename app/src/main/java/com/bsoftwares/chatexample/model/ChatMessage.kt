@@ -8,6 +8,9 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.bsoftwares.chatexample.database.ChatMessageDB
 import com.bsoftwares.chatexample.database.LatestMessageDB
+import com.squareup.picasso.Picasso
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 data class ChatMessage(
@@ -45,18 +48,6 @@ suspend fun List<LatestChatMessage>.toLatestDatabase(): Array<LatestMessageDB> {
             fromUserName = it.fromUserName,
             otherId = it.otherId,
             timeStamp = it.timeStamp
-            //profilePhoto = loadBitmap(it.profilePhotoURL, context)
         )
     }.toTypedArray()
 }
-
-suspend fun loadBitmap(imageUrl: String, context: Context): Bitmap {
-    val loading = ImageLoader(context)
-    val request = ImageRequest.Builder(context)
-        .data(imageUrl)
-        .build()
-
-    val result = (loading.execute(request) as SuccessResult).drawable
-    return (result as BitmapDrawable).bitmap
-}
-

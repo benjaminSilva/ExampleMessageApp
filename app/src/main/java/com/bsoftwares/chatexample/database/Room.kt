@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import androidx.room.Dao
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChatDao{
@@ -20,7 +21,7 @@ interface ChatDao{
     fun getImagesList() : LiveData<List<UsersDB>>
 
     @Query("select * from usersdb WHERE userUID= :userUid")
-    fun getUserUid(userUid : String) : LiveData<UsersDB>
+    fun getUserUid(userUid : String?) : LiveData<UsersDB>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun inserirMessages(vararg settings : ChatMessageDB)

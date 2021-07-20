@@ -1,5 +1,7 @@
 package com.bsoftwares.chatexample.ui.home
 
+import android.annotation.SuppressLint
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
@@ -49,16 +51,17 @@ class HomeActivityAdapter(private val interaction: Interaction? = null) :
 
         }
 
-        fun bind(item: LatestMessageDB) = with(itemView) {
-            itemView.txt_message_latest.text = item.text
+        @SuppressLint("SimpleDateFormat")
+        fun bind(item: LatestMessageDB?) = with(itemView) {
+            itemView.txt_message_latest.text = item!!.text
             val sdf = SimpleDateFormat("EEEE")
             val date = Date(item.timeStamp)
             itemView.setOnClickListener {
                 interaction?.onItemClicked(adapterPosition, item,item.otherId)
             }
             val user = pictures!!.find { it.userUID == item.otherId }
-            val bitmap = user!!.profilePhoto
-            itemView.civ_user_profile_image_latest_message.setImageBitmap(bitmap)
+            //val bitmap = user!!.profilePhoto
+            itemView.civ_user_profile_image_latest_message.setImageURI(Uri.parse(user!!.profilePhoto))
             itemView.txt_when_message_was_sent.text = sdf.format(date)
             itemView.txt_userName_latest.text = item.fromUserName
         }

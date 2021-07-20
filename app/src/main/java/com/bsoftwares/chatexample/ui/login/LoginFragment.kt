@@ -38,10 +38,10 @@ class LoginFragment : Fragment() {
         btn_login.setOnClickListener {
             val email = createString(editTextTextPersonName)
             val password = createString(editTextTextPassword)
-            if (email == "")
+            if (email.isBlank())
                 til_email_login.error = getString(R.string.error_email_required)
 
-            if (password == "")
+            if (password.isBlank())
                 til_password_login.error = getString(R.string.error_password_required)
             if (email.isNotEmpty() || password.isNotEmpty())
                 signIn(email,password)

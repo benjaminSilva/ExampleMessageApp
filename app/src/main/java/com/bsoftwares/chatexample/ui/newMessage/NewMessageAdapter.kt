@@ -1,5 +1,6 @@
 package com.bsoftwares.chatexample.ui.newMessage
 
+import android.net.Uri
 import android.os.Build
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
@@ -58,7 +59,7 @@ class NewMessageAdapter(private val interaction: Interaction? = null) :
 
             shimmer_test.hideShimmer()
             itemView.txt_userName.text = item.userName
-            civ_userImage.setImageBitmap(item.profilePhoto)
+            civ_userImage.setImageURI(Uri.parse(item.profilePhoto))
         }
     }
 

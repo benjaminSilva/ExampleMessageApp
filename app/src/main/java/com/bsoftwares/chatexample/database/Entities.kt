@@ -2,12 +2,14 @@ package com.bsoftwares.chatexample.database
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.bsoftwares.chatexample.model.LatestChatMessage
-import com.bsoftwares.chatexample.model.loadBitmap
+import kotlinx.android.parcel.Parcelize
 
 @Entity
+@Parcelize
 data class ChatMessageDB(
     @PrimaryKey
     val messageID : String,
@@ -18,7 +20,7 @@ data class ChatMessageDB(
     val fromUserName : String,
     val position : Int,
     val chatId : String
-)
+) : Parcelable
 
 @Entity
 data class LatestMessageDB(
@@ -32,21 +34,11 @@ data class LatestMessageDB(
 )
 
 @Entity
+@Parcelize
 data class UsersDB(
     @PrimaryKey
     val userUID: String,
     val userName : String,
     val userToken : String,
-    val profilePhoto: Bitmap
-)
-
-suspend fun List<LatestChatMessage>.toProfileImage(context : Context) : Array<UsersDB> {
-    return map {
-        UsersDB(
-            userUID = it.otherId,
-            userName = it.fromUserName,
-            userToken = "",
-            profilePhoto = loadBitmap(it.profilePhotoURL,context = context)
-        )
-    }.toTypedArray()
-}
+    val profilePhoto: String
+) : Parcelable

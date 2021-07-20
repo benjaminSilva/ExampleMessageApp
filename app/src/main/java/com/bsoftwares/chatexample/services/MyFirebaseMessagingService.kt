@@ -1,33 +1,40 @@
 package com.bsoftwares.chatexample.services
 
 import android.app.*
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.LocusId
-import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.toIcon
-import coil.imageLoader
 import com.bsoftwares.chatexample.R
 import com.bsoftwares.chatexample.broadcast.DirectMessageReply
 import com.bsoftwares.chatexample.broadcast.NotificationDismissed
 import com.bsoftwares.chatexample.database.UsersDB
+import com.bsoftwares.chatexample.database.getDataBase
+import com.bsoftwares.chatexample.model.ChatUser
 import com.bsoftwares.chatexample.model.NotificationData
+import com.bsoftwares.chatexample.model.getBitmap
+import com.bsoftwares.chatexample.repository.Repository
 import com.bsoftwares.chatexample.services.MyFirebaseMessagingService.Companion.notificationsSent
 import com.bsoftwares.chatexample.ui.chat.ChatActivity
 import com.bsoftwares.chatexample.utils.Constants
 import com.bsoftwares.chatexample.utils.Constants.Companion.KEY_TEXT_REPLY
-import com.bsoftwares.chatexample.utils.getCircleBitmap
-import com.bsoftwares.chatexample.utils.getImageUri
+import com.bsoftwares.chatexample.utils.getCircleImageFromBitmap
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.*
+import java.io.File
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -39,31 +46,26 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         var notificationsSent = LinkedHashMap<NotificationData, Person>()
     }
 
-
-
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-
-        val notificationdata = NotificationData(
-            title = remoteMessage.data["title"]!!,
-            message = remoteMessage.data["message"]!!,
-            profileURL = remoteMessage.data["userUid"]!!,
-            userUid = remoteMessage.data["profileURL"]!!
-        )
-
+        val message = remoteMessage.data["message"]!!
         val name = remoteMessage.data["title"]!!
         val uid = remoteMessage.data["userUid"]!!
         val url = remoteMessage.data["profileURL"]!!
-        val bitmap = getCircleBitmap(Picasso.get().load(url).get())
+
+        val notificationdata = NotificationData(
+            title = name,
+            message = message,
+            userUid = uid,
+            profileURL = url
+        )
 
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel(channelName = name, channelID = uid)
-        }
+        val bitmap = Picasso.get().load(url).get()
 
-        val person = Person.Builder().setIcon(bitmap!!.toIcon())
+        val person = Person.Builder().setIcon(getCircleImageFromBitmap(bitmap).toIcon())
             .setName(name)
             .setImportant(true)
             .build()
@@ -71,29 +73,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationsSent[notificationdata] = person
 
         val messageStyle = Notification.MessagingStyle(person).apply {
-            for (message in notificationsSent) {
-                addMessage(message.key.message, System.currentTimeMillis(), message.value)
+            for (currentMessage in notificationsSent) {
+                addMessage(
+                    currentMessage.key.message,
+                    System.currentTimeMillis(),
+                    currentMessage.value
+                )
             }
         }
 
-        val builder = Notification.Builder(this, uid)
-            .setSmallIcon(R.drawable.logo)
-            .setContentTitle(name)
-            .setAutoCancel(true)
-            .setStyle(messageStyle)
-            .addPerson(person)
-            .setShortcutId(uid)
-            .setLocusId(LocusId(uid))
-            .setColor(applicationContext.resources.getColor(R.color.colorPrimary))
-            .addAction(replyAction(uid, this))
-            .setBubbleMetadata(createBubbleNotification(bitmap, this))
-            .setContentIntent(openChatWithUid(uid, this))
-            .setDeleteIntent(dismissIntent(this))
+        createNotificationChannel(channelName = name, channelID = uid)
 
-        with(NotificationManagerCompat.from(this)) {
-            notify(0, builder.build())
-        }
+        createNotification(baseContext,uid,messageStyle,person,message)
+
+        //val bitmap = getCircleImageFromBitmap(userLiveData!!.profilePhoto,baseContext)
+
     }
+
+
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun createNotificationChannel(channelName: String, channelID: String) {
@@ -139,6 +136,30 @@ fun dismissIntent(context: Context): PendingIntent {
     return PendingIntent.getBroadcast(context, 0, dismissIntent, 0)
 }
 
+private fun createNotification(context : Context,uid : String, messageStyle : Notification.MessagingStyle, person : Person, title: String) {
+
+    val repository = Repository(context)
+
+    repository.loadMessages(otherUid = uid)
+
+    val builder = Notification.Builder(context, uid)
+        .setSmallIcon(R.drawable.logo)
+        .setContentTitle(title)
+        .setAutoCancel(true)
+        .setStyle(messageStyle)
+        .addPerson(person)
+        .setShortcutId(uid)
+        .setLocusId(LocusId(uid))
+        .setColor(context.resources.getColor(R.color.colorPrimary))
+        .addAction(replyAction(uid, context))
+        .setContentIntent(openChatWithUid(uid, context))
+        .setDeleteIntent(dismissIntent(context))
+
+    with(NotificationManagerCompat.from(context)) {
+        notify(0, builder.build())
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.N)
 fun replyAction(uid: String, context: Context): Notification.Action {
 
@@ -161,19 +182,29 @@ fun replyAction(uid: String, context: Context): Notification.Action {
     ).addRemoteInput(remoteInput).setAllowGeneratedReplies(true).build()
 }
 
-@RequiresApi(Build.VERSION_CODES.P)
-fun updateNotification(currentUser: UsersDB, otherUser: UsersDB, title: String, context: Context) {
 
-    val person = Person.Builder().setIcon(getCircleBitmap(otherUser.profilePhoto)!!.toIcon())
+@RequiresApi(Build.VERSION_CODES.P)
+fun updateNotification(
+    currentUser: UsersDB,
+    otherUser: UsersDB,
+    title: String,
+    context: Context
+) {
+
+    val otherUserPic = getCircleImageFromBitmap(BitmapFactory.decodeFile(File(otherUser.profilePhoto).absolutePath))
+
+    val person = Person.Builder().setIcon(otherUserPic.toIcon())
         .setName(otherUser.userName)
         .build()
 
+    val currentUserPic = getCircleImageFromBitmap(BitmapFactory.decodeFile(File(currentUser.profilePhoto).absolutePath))
 
-    val mySelf = Person.Builder().setIcon(getCircleBitmap(currentUser.profilePhoto)!!.toIcon())
-        .setName(currentUser.userName)
-        .build()
+    val mySelf =
+        Person.Builder().setIcon(currentUserPic.toIcon())
+            .setName(currentUser.userName)
+            .build()
 
-    notificationsSent[NotificationData(currentUser.userName, title, "", currentUser.userUID)] =
+    notificationsSent[NotificationData(currentUser.userName, title, currentUser.userUID, "")] =
         mySelf
 
     val messageStyle = Notification.MessagingStyle(person).apply {
@@ -182,17 +213,61 @@ fun updateNotification(currentUser: UsersDB, otherUser: UsersDB, title: String, 
         }
     }
 
-    val builder = Notification.Builder(context, Constants.CHANNEL_ID)
+    createNotification(context,otherUser.userUID,messageStyle,person,currentUser.userName)
+
+    /*val builder = Notification.Builder(context, otherUser.userUID)
         .setSmallIcon(R.drawable.logo)
         .setContentTitle(currentUser.userName)
         .setAutoCancel(true)
-        .addAction(replyAction(otherUser.userUID, context))
+        .addAction(replyAction(otherUser.userName, context))
         .setDeleteIntent(dismissIntent(context))
-        .setContentIntent(openChatWithUid(otherUser.userUID, context))
+        .setContentIntent(openChatWithUid(otherUser.userName, context))
         .setColor(context.resources.getColor(R.color.colorPrimary))
         .setStyle(messageStyle)
 
     with(NotificationManagerCompat.from(context)) {
         notify(0, builder.build())
-    }
+    }*/
+
+
+    /*Glide.with(context)
+        .asBitmap()
+        .load(currentUser.profileImageUrl)
+        .into(object : CustomTarget<Bitmap>() {
+            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                val mySelf =
+                    Person.Builder().setIcon(getCircleImageFromBitmap(resource).toIcon())
+                        .setName(currentUser.username)
+                        .build()
+
+
+                notificationsSent[NotificationData(currentUser.username, title, currentUser.uid, "")] =
+                    mySelf
+
+                val messageStyle = Notification.MessagingStyle(mySelf).apply {
+                    for (mensagem in notificationsSent) {
+                        addMessage(mensagem.key.message, System.currentTimeMillis(), mensagem.value)
+                    }
+                }
+
+                val builder = Notification.Builder(context, otherUser.uid)
+                    .setSmallIcon(R.drawable.logo)
+                    .setContentTitle(currentUser.username)
+                    .setAutoCancel(true)
+                    .addAction(replyAction(otherUser.username, context))
+                    .setDeleteIntent(dismissIntent(context))
+                    .setContentIntent(openChatWithUid(otherUser.username, context))
+                    .setColor(context.resources.getColor(R.color.colorPrimary))
+                    .setStyle(messageStyle)
+
+                with(NotificationManagerCompat.from(context)) {
+                    notify(0, builder.build())
+                }
+
+            }
+            override fun onLoadCleared(placeholder: Drawable?) {
+
+            }
+        })*/
+
 }
